@@ -1,0 +1,151 @@
+import java.util.*;
+
+public class HospitalManagementSystem {
+    static Scanner sc = new Scanner(System.in);
+    static ArrayList<String[]> patients = new ArrayList<>();
+    static ArrayList<String[]> doctors = new ArrayList<>();
+    static ArrayList<String[]> appointments = new ArrayList<>();
+    static int patCounter = 1001, appCounter = 7001;
+
+    static {
+        doctors.add(new String[]{"DR001", "Dr. Ramesh Kumar", "Cardiology", "9:00-12:00"});
+        doctors.add(new String[]{"DR002", "Dr. Priya Sharma", "Neurology", "10:00-13:00"});
+        doctors.add(new String[]{"DR003", "Dr. Anil Verma", "Orthopedics", "14:00-17:00"});
+        doctors.add(new String[]{"DR004", "Dr. Sita Devi", "Pediatrics", "9:00-11:00"});
+    }
+
+    public static void main(String[] args) {
+        System.out.println("============================================");
+        System.out.println("       HOSPITAL MANAGEMENT SYSTEM");
+        System.out.println("============================================");
+        while (true) {
+            System.out.println("\n1. Register Patient");
+            System.out.println("2. View Doctors");
+            System.out.println("3. Book Appointment");
+            System.out.println("4. View Appointments");
+            System.out.println("5. View All Patients");
+            System.out.println("6. Generate Bill");
+            System.out.println("7. Exit");
+            System.out.print("Choice: ");
+            int ch = sc.nextInt();
+            switch (ch) {
+                case 1: registerPatient(); break;
+                case 2: viewDoctors(); break;
+                case 3: bookAppointment(); break;
+                case 4: viewAppointments(); break;
+                case 5: viewPatients(); break;
+                case 6: generateBill(); break;
+                case 7: System.out.println("Stay healthy!"); return;
+                default: System.out.println("Invalid!");
+            }
+        }
+    }
+
+    static void registerPatient() {
+        sc.nextLine();
+        System.out.print("Patient Name: ");
+        String name = sc.nextLine();
+        System.out.print("Age: ");
+        int age = sc.nextInt();
+        System.out.print("Gender (M/F): ");
+        String gender = sc.next();
+        sc.nextLine();
+        System.out.print("Address: ");
+        String addr = sc.nextLine();
+        System.out.print("Phone: ");
+        String phone = sc.next();
+        System.out.print("Blood Group: ");
+        String blood = sc.next();
+        String pid = "P" + patCounter++;
+        patients.add(new String[]{pid, name, String.valueOf(age), gender, addr, phone, blood});
+        System.out.println("\nPatient registered! Patient ID: " + pid);
+    }
+
+    static void viewDoctors() {
+        System.out.println("\n--- DOCTORS ---");
+        System.out.printf("%-6s %-20s %-15s %-12s%n", "ID", "Name", "Specialty", "Timing");
+        System.out.println("-".repeat(60));
+        for (String[] d : doctors) {
+            System.out.printf("%-6s %-20s %-15s %-12s%n", d[0], d[1], d[2], d[3]);
+        }
+    }
+
+    static void bookAppointment() {
+        if (patients.isEmpty()) { System.out.println("No patients registered!"); return; }
+        viewDoctors();
+        System.out.print("\nEnter Patient ID: ");
+        String pid = sc.next();
+        String[] patient = findPatient(pid);
+        if (patient == null) { System.out.println("Patient not found!"); return; }
+        System.out.print("Enter Doctor ID: ");
+        String did = sc.next();
+        String[] doctor = findDoctor(did);
+        if (doctor == null) { System.out.println("Doctor not found!"); return; }
+        System.out.print("Appointment Date (DD/MM/YYYY): ");
+        String date = sc.next();
+        System.out.print("Reason: ");
+        sc.nextLine();
+        String reason = sc.nextLine();
+
+        String aid = "APT" + appCounter++;
+        appointments.add(new String[]{aid, pid, patient[1], did, doctor[1], date, reason, "Scheduled"});
+        System.out.println("\nAppointment booked! ID: " + aid);
+        System.out.println("Doctor: " + doctor[1] + " | Date: " + date);
+    }
+
+    static void viewAppointments() {
+        if (appointments.isEmpty()) { System.out.println("No appointments!"); return; }
+        System.out.println("\n--- APPOINTMENTS ---");
+        System.out.printf("%-8s %-8s %-15s %-8s %-20s %-12s %-10s%n",
+            "AptID", "PatID", "Patient", "DocID", "Doctor", "Date", "Status");
+        System.out.println("-".repeat(90));
+        for (String[] a : appointments) {
+            System.out.printf("%-8s %-8s %-15s %-8s %-20s %-12s %-10s%n",
+                a[0], a[1], a[2], a[3], a[4], a[5], a[7]);
+        }
+    }
+
+    static void viewPatients() {
+        if (patients.isEmpty()) { System.out.println("No patients!"); return; }
+        System.out.println("\n--- PATIENTS ---");
+        System.out.printf("%-6s %-15s %-4s %-6s %-10s %-8s%n",
+            "ID", "Name", "Age", "Gender", "Phone", "Blood");
+        System.out.println("-".repeat(55));
+        for (String[] p : patients) {
+            System.out.printf("%-6s %-15s %-4s %-6s %-10s %-8s%n",
+                p[0], p[1], p[2], p[3], p[5], p[6]);
+        }
+    }
+
+    static void generateBill() {
+        System.out.print("Enter Patient ID: ");
+        String pid = sc.next();
+        String[] patient = findPatient(pid);
+        if (patient == null) { System.out.println("Patient not found!"); return; }
+        System.out.print("Consultation charges: Rs.");
+        double consult = sc.nextDouble();
+        System.out.print("Medicine charges: Rs.");
+        double medicine = sc.nextDouble();
+        System.out.print("Lab test charges: Rs.");
+        double lab = sc.nextDouble();
+        double total = consult + medicine + lab;
+        System.out.println("\n====== HOSPITAL BILL ======");
+        System.out.println("Patient       : " + patient[1]);
+        System.out.println("Consultation  : Rs." + consult);
+        System.out.println("Medicines     : Rs." + medicine);
+        System.out.println("Lab Tests     : Rs." + lab);
+        System.out.println("---------------------------");
+        System.out.println("TOTAL         : Rs." + total);
+        System.out.println("===========================");
+    }
+
+    static String[] findPatient(String id) {
+        for (String[] p : patients) if (p[0].equals(id)) return p;
+        return null;
+    }
+
+    static String[] findDoctor(String id) {
+        for (String[] d : doctors) if (d[0].equalsIgnoreCase(id)) return d;
+        return null;
+    }
+}
