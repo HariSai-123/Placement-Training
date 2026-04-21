@@ -1,0 +1,124 @@
+import java.util.*;
+
+public class HotelBookingSystem {
+    static Scanner sc = new Scanner(System.in);
+    static String[][] rooms = {
+        {"101", "Single", "1200.00", "Available"},
+        {"102", "Double", "2000.00", "Available"},
+        {"103", "Suite",  "5000.00", "Available"},
+        {"104", "Single", "1200.00", "Available"},
+        {"105", "Double", "2000.00", "Available"},
+        {"201", "Suite",  "5500.00", "Available"},
+        {"202", "Single", "1300.00", "Available"},
+        {"203", "Double", "2200.00", "Available"}
+    };
+    static ArrayList<String[]> bookings = new ArrayList<>();
+    static int counter = 5001;
+
+    public static void main(String[] args) {
+        System.out.println("==========================================");
+        System.out.println("          HOTEL BOOKING SYSTEM");
+        System.out.println("==========================================");
+        while (true) {
+            System.out.println("\n1. View Available Rooms");
+            System.out.println("2. Book Room");
+            System.out.println("3. Check Out");
+            System.out.println("4. View Bookings");
+            System.out.println("5. Exit");
+            System.out.print("Choice: ");
+            int ch = sc.nextInt();
+            switch (ch) {
+                case 1: viewRooms(); break;
+                case 2: bookRoom(); break;
+                case 3: checkOut(); break;
+                case 4: viewBookings(); break;
+                case 5: System.out.println("Thank you for staying with us!"); return;
+                default: System.out.println("Invalid!");
+            }
+        }
+    }
+
+    static void viewRooms() {
+        System.out.println("\n--- ROOM AVAILABILITY ---");
+        System.out.printf("%-6s %-10s %-12s %-12s%n", "Room", "Type", "Rate/Night", "Status");
+        System.out.println("-".repeat(45));
+        for (String[] r : rooms) {
+            System.out.printf("%-6s %-10s Rs.%-9s %-12s%n", r[0], r[1], r[2], r[3]);
+        }
+    }
+
+    static void bookRoom() {
+        viewRooms();
+        System.out.print("\nEnter Room Number: ");
+        String roomNo = sc.next();
+        int idx = findRoom(roomNo);
+        if (idx == -1) { System.out.println("Room not found!"); return; }
+        if (!rooms[idx][3].equals("Available")) { System.out.println("Room already booked!"); return; }
+
+        sc.nextLine();
+        System.out.print("Guest Name: ");
+        String name = sc.nextLine();
+        System.out.print("Phone: ");
+        String phone = sc.next();
+        System.out.print("Check-in Date (DD/MM/YYYY): ");
+        String checkIn = sc.next();
+        System.out.print("Check-out Date (DD/MM/YYYY): ");
+        String checkOut = sc.next();
+        System.out.print("Number of Nights: ");
+        int nights = sc.nextInt();
+
+        double fare = Double.parseDouble(rooms[idx][2]) * nights;
+        String id = "HT" + counter++;
+        rooms[idx][3] = "Booked";
+        bookings.add(new String[]{id, roomNo, rooms[idx][1], name, phone, checkIn, checkOut,
+            String.valueOf(nights), String.valueOf(fare)});
+
+        System.out.println("\n====== BOOKING CONFIRMED ======");
+        System.out.println("Booking ID   : " + id);
+        System.out.println("Room         : " + roomNo + " (" + rooms[idx][1] + ")");
+        System.out.println("Guest        : " + name);
+        System.out.println("Check-in     : " + checkIn);
+        System.out.println("Check-out    : " + checkOut);
+        System.out.println("Nights       : " + nights);
+        System.out.println("Total Amount : Rs." + fare);
+        System.out.println("================================");
+    }
+
+    static void checkOut() {
+        System.out.print("Enter Booking ID: ");
+        String id = sc.next();
+        for (int i = 0; i < bookings.size(); i++) {
+            if (bookings.get(i)[0].equals(id)) {
+                String roomNo = bookings.get(i)[1];
+                int idx = findRoom(roomNo);
+                rooms[idx][3] = "Available";
+                System.out.println("\n====== CHECK OUT ======");
+                System.out.println("Guest      : " + bookings.get(i)[3]);
+                System.out.println("Room       : " + roomNo);
+                System.out.println("Total Bill : Rs." + bookings.get(i)[8]);
+                System.out.println("Thank you for your stay!");
+                bookings.remove(i);
+                return;
+            }
+        }
+        System.out.println("Booking not found!");
+    }
+
+    static void viewBookings() {
+        if (bookings.isEmpty()) { System.out.println("No bookings!"); return; }
+        System.out.println("\n--- CURRENT BOOKINGS ---");
+        System.out.printf("%-8s %-6s %-10s %-15s %-12s %-12s %-7s %-10s%n",
+            "BookID", "Room", "Type", "Guest", "Check-in", "Check-out", "Nights", "Amount");
+        System.out.println("-".repeat(85));
+        for (String[] b : bookings) {
+            System.out.printf("%-8s %-6s %-10s %-15s %-12s %-12s %-7s Rs.%-7s%n",
+                b[0], b[1], b[2], b[3], b[5], b[6], b[7], b[8]);
+        }
+    }
+
+    static int findRoom(String no) {
+        for (int i = 0; i < rooms.length; i++)
+            if (rooms[i][0].equals(no)) return i;
+        return -1;
+    }
+}
