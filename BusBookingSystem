@@ -1,0 +1,28 @@
+import java.util.*;
+
+class BusBooking {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int seats = 10;
+
+        while (true) {
+            System.out.println("\n1.Book\n2.Status\n3.Exit");
+            int ch = sc.nextInt();
+
+            if (ch == 1) {
+                if (seats > 0) {
+                    System.out.print("Enter name: ");
+                    String name = sc.next();
+                    seats--;
+                    System.out.println("Seat booked for " + name);
+                } else {
+                    System.out.println("Full");
+                }
+            } else if (ch == 2) {
+                System.out.println("Seats left: " + seats);
+            } else {
+                break;
+            }
+        }
+    }
+}
