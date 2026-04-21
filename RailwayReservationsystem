@@ -1,0 +1,37 @@
+import java.util.*;
+
+class Railway {
+    static int seats = 5;
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int choice;
+
+        do {
+            System.out.println("\n1.Book Ticket\n2.Cancel Ticket\n3.Check Seats\n4.Exit");
+            choice = sc.nextInt();
+
+            switch (choice) {
+                case 1:
+                    if (seats > 0) {
+                        System.out.print("Enter name: ");
+                        String name = sc.next();
+                        seats--;
+                        System.out.println("Ticket booked for " + name);
+                    } else {
+                        System.out.println("No seats available");
+                    }
+                    break;
+
+                case 2:
+                    seats++;
+                    System.out.println("Ticket cancelled");
+                    break;
+
+                case 3:
+                    System.out.println("Available seats: " + seats);
+                    break;
+            }
+        } while (choice != 4);
+    }
+}
