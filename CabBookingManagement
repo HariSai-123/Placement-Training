@@ -1,0 +1,118 @@
+import java.util.*;
+
+public class CabBookingSystem {
+    static Scanner sc = new Scanner(System.in);
+    static String[][] drivers = {
+        {"D001", "Ravi Kumar", "MH12AB1234", "Sedan", "Available"},
+        {"D002", "Suresh Rao", "KA09CD5678", "SUV", "Available"},
+        {"D003", "Amit Singh", "DL03EF9012", "Mini", "Available"},
+        {"D004", "Vijay Nair", "TN22GH3456", "Sedan", "Available"}
+    };
+    static double[] farePerKm = {12.0, 18.0, 8.0, 12.0};
+    static ArrayList<String[]> rides = new ArrayList<>();
+    static int counter = 4001;
+
+    public static void main(String[] args) {
+        System.out.println("========================================");
+        System.out.println("          CAB BOOKING SYSTEM");
+        System.out.println("========================================");
+        while (true) {
+            System.out.println("\n1. Book a Cab");
+            System.out.println("2. Complete Ride");
+            System.out.println("3. View Ride History");
+            System.out.println("4. View Available Cabs");
+            System.out.println("5. Exit");
+            System.out.print("Choice: ");
+            int ch = sc.nextInt();
+            switch (ch) {
+                case 1: bookCab(); break;
+                case 2: completeRide(); break;
+                case 3: viewHistory(); break;
+                case 4: viewCabs(); break;
+                case 5: System.out.println("Thanks for riding with us!"); return;
+                default: System.out.println("Invalid choice!");
+            }
+        }
+    }
+
+    static void viewCabs() {
+        System.out.println("\n--- AVAILABLE CABS ---");
+        System.out.printf("%-6s %-15s %-12s %-8s %-10s %-12s%n",
+            "ID", "Driver", "Vehicle No", "Type", "Fare/km", "Status");
+        System.out.println("-".repeat(68));
+        for (int i = 0; i < drivers.length; i++) {
+            if (drivers[i][4].equals("Available")) {
+                System.out.printf("%-6s %-15s %-12s %-8s Rs.%-7.1f %-12s%n",
+                    drivers[i][0], drivers[i][1], drivers[i][2],
+                    drivers[i][3], farePerKm[i], drivers[i][4]);
+            }
+        }
+    }
+
+    static void bookCab() {
+        viewCabs();
+        System.out.print("\nEnter Driver ID: ");
+        String driverId = sc.next();
+        int idx = findDriver(driverId);
+        if (idx == -1) { System.out.println("Driver not found!"); return; }
+        if (!drivers[idx][4].equals("Available")) { System.out.println("Driver not available!"); return; }
+
+        sc.nextLine();
+        System.out.print("Passenger Name: ");
+        String name = sc.nextLine();
+        System.out.print("Pickup Location: ");
+        String pickup = sc.nextLine();
+        System.out.print("Drop Location: ");
+        String drop = sc.nextLine();
+        System.out.print("Estimated Distance (km): ");
+        double dist = sc.nextDouble();
+
+        double fare = farePerKm[idx] * dist;
+        String rideId = "RD" + counter++;
+        rides.add(new String[]{rideId, driverId, drivers[idx][1], name, pickup, drop,
+            String.valueOf(dist), String.valueOf(fare), "Active"});
+        drivers[idx][4] = "On Trip";
+
+        System.out.println("\n====== RIDE CONFIRMED ======");
+        System.out.println("Ride ID     : " + rideId);
+        System.out.println("Driver      : " + drivers[idx][1]);
+        System.out.println("Vehicle     : " + drivers[idx][2] + " (" + drivers[idx][3] + ")");
+        System.out.println("Passenger   : " + name);
+        System.out.println("Pickup      : " + pickup);
+        System.out.println("Drop        : " + drop);
+        System.out.println("Distance    : " + dist + " km");
+        System.out.println("Est. Fare   : Rs." + String.format("%.2f", fare));
+        System.out.println("============================");
+    }
+
+    static void completeRide() {
+        System.out.print("Enter Ride ID: ");
+        String rideId = sc.next();
+        for (String[] r : rides) {
+            if (r[0].equals(rideId) && r[8].equals("Active")) {
+                r[8] = "Completed";
+                int idx = findDriver(r[1]);
+                drivers[idx][4] = "Available";
+                System.out.println("Ride " + rideId + " completed!");
+                System.out.println("Total Fare: Rs." + r[7]);
+                return;
+            }
+        }
+        System.out.println("Active ride not found!");
+    }
+
+    static void viewHistory() {
+        if (rides.isEmpty()) { System.out.println("No rides yet!"); return; }
+        System.out.println("\n--- RIDE HISTORY ---");
+        for (String[] r : rides) {
+            System.out.println("Ride: " + r[0] + " | Driver: " + r[2] + " | Passenger: " + r[3]
+                + " | " + r[4] + " -> " + r[5] + " | Fare: Rs." + r[7] + " | " + r[8]);
+        }
+    }
+
+    static int findDriver(String id) {
+        for (int i = 0; i < drivers.length; i++)
+            if (drivers[i][0].equalsIgnoreCase(id)) return i;
+        return -1;
+    }
+}
