@@ -1,0 +1,135 @@
+import java.util.*;
+
+public class FlightBookingSystem {
+    static Scanner sc = new Scanner(System.in);
+    static String[][] flights = {
+        {"AI101", "Air India", "Delhi", "Mumbai", "Economy", "3500.00", "60"},
+        {"AI102", "Air India", "Delhi", "Mumbai", "Business", "8500.00", "20"},
+        {"IN201", "IndiGo", "Mumbai", "Bangalore", "Economy", "2800.00", "80"},
+        {"SP301", "SpiceJet", "Chennai", "Kolkata", "Economy", "3200.00", "70"},
+        {"VT401", "Vistara", "Hyderabad", "Delhi", "Business", "9000.00", "15"}
+    };
+    static int[] seats = {60, 20, 80, 70, 15};
+    static ArrayList<String[]> bookings = new ArrayList<>();
+    static int counter = 3001;
+
+    public static void main(String[] args) {
+        System.out.println("==========================================");
+        System.out.println("        FLIGHT BOOKING SYSTEM");
+        System.out.println("==========================================");
+        while (true) {
+            System.out.println("\n1. Search Flights");
+            System.out.println("2. Book Flight");
+            System.out.println("3. Cancel Booking");
+            System.out.println("4. View All Bookings");
+            System.out.println("5. Exit");
+            System.out.print("Choice: ");
+            int ch = sc.nextInt();
+            switch (ch) {
+                case 1: searchFlights(); break;
+                case 2: bookFlight(); break;
+                case 3: cancelBooking(); break;
+                case 4: viewBookings(); break;
+                case 5: System.out.println("Fly safe!"); return;
+                default: System.out.println("Invalid!");
+            }
+        }
+    }
+
+    static void searchFlights() {
+        sc.nextLine();
+        System.out.print("From City: ");
+        String from = sc.nextLine();
+        System.out.print("To City: ");
+        String to = sc.nextLine();
+        System.out.println("\n--- SEARCH RESULTS ---");
+        System.out.printf("%-8s %-12s %-10s %-10s %-10s %-10s %-6s%n",
+            "FlightNo", "Airline", "From", "To", "Class", "Fare", "Seats");
+        System.out.println("-".repeat(70));
+        boolean found = false;
+        for (int i = 0; i < flights.length; i++) {
+            if (flights[i][2].equalsIgnoreCase(from) && flights[i][3].equalsIgnoreCase(to)) {
+                System.out.printf("%-8s %-12s %-10s %-10s %-10s %-10s %-6d%n",
+                    flights[i][0], flights[i][1], flights[i][2], flights[i][3],
+                    flights[i][4], "Rs." + flights[i][5], seats[i]);
+                found = true;
+            }
+        }
+        if (!found) System.out.println("No flights found for this route.");
+    }
+
+    static void bookFlight() {
+        System.out.println("\n--- ALL FLIGHTS ---");
+        System.out.printf("%-8s %-12s %-10s %-10s %-10s %-10s %-6s%n",
+            "FlightNo", "Airline", "From", "To", "Class", "Fare", "Seats");
+        System.out.println("-".repeat(70));
+        for (int i = 0; i < flights.length; i++) {
+            System.out.printf("%-8s %-12s %-10s %-10s %-10s %-10s %-6d%n",
+                flights[i][0], flights[i][1], flights[i][2], flights[i][3],
+                flights[i][4], "Rs." + flights[i][5], seats[i]);
+        }
+        System.out.print("\nEnter Flight Number: ");
+        String flightNo = sc.next();
+        int idx = findFlight(flightNo);
+        if (idx == -1) { System.out.println("Flight not found!"); return; }
+        if (seats[idx] == 0) { System.out.println("Flight full!"); return; }
+
+        sc.nextLine();
+        System.out.print("Passenger Name: ");
+        String name = sc.nextLine();
+        System.out.print("Age: ");
+        int age = sc.nextInt();
+        System.out.print("Passport/ID No: ");
+        String passport = sc.next();
+        System.out.print("Number of Tickets: ");
+        int tickets = sc.nextInt();
+
+        if (tickets > seats[idx]) { System.out.println("Not enough seats!"); return; }
+
+        double fare = Double.parseDouble(flights[idx][5]) * tickets;
+        String id = "FL" + counter++;
+        bookings.add(new String[]{id, flightNo, flights[idx][0], flights[idx][1], name,
+            String.valueOf(age), passport, String.valueOf(tickets), String.valueOf(fare)});
+        seats[idx] -= tickets;
+
+        System.out.println("\n====== BOARDING PASS ======");
+        System.out.println("PNR          : " + id);
+        System.out.println("Flight       : " + flights[idx][0] + " (" + flights[idx][1] + ")");
+        System.out.println("Route        : " + flights[idx][2] + " -> " + flights[idx][3]);
+        System.out.println("Class        : " + flights[idx][4]);
+        System.out.println("Passenger    : " + name);
+        System.out.println("Tickets      : " + tickets);
+        System.out.println("Total Fare   : Rs." + fare);
+        System.out.println("===========================");
+    }
+
+    static void cancelBooking() {
+        System.out.print("Enter PNR: ");
+        String id = sc.next();
+        for (int i = 0; i < bookings.size(); i++) {
+            if (bookings.get(i)[0].equals(id)) {
+                int idx = findFlight(bookings.get(i)[1]);
+                seats[idx] += Integer.parseInt(bookings.get(i)[7]);
+                System.out.println("Booking " + id + " cancelled. Refund: Rs." + bookings.get(i)[8]);
+                bookings.remove(i);
+                return;
+            }
+        }
+        System.out.println("PNR not found!");
+    }
+
+    static void viewBookings() {
+        if (bookings.isEmpty()) { System.out.println("No bookings!"); return; }
+        System.out.println("\n--- ALL BOOKINGS ---");
+        for (String[] b : bookings) {
+            System.out.println("PNR: " + b[0] + " | Flight: " + b[2] + " | Passenger: " + b[4]
+                + " | Tickets: " + b[7] + " | Fare: Rs." + b[8]);
+        }
+    }
+
+    static int findFlight(String no) {
+        for (int i = 0; i < flights.length; i++)
+            if (flights[i][0].equalsIgnoreCase(no)) return i;
+        return -1;
+    }
+}
