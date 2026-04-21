@@ -1,0 +1,178 @@
+import java.util.*;
+
+public class LibraryManagementSystem {
+    static Scanner sc = new Scanner(System.in);
+    static ArrayList<String[]> books = new ArrayList<>();
+    static ArrayList<String[]> members = new ArrayList<>();
+    static ArrayList<String[]> transactions = new ArrayList<>();
+    static int mCounter = 3001, tCounter = 1001;
+
+    static {
+        books.add(new String[]{"B001", "Java Programming", "James Gosling", "OOP", "3", "3"});
+        books.add(new String[]{"B002", "Data Structures", "Mark Allen", "CS", "4", "4"});
+        books.add(new String[]{"B003", "Clean Code", "Robert Martin", "Programming", "2", "2"});
+        books.add(new String[]{"B004", "Design Patterns", "GoF", "Software", "3", "3"});
+    }
+
+    public static void main(String[] args) {
+        System.out.println("==========================================");
+        System.out.println("       LIBRARY MANAGEMENT SYSTEM");
+        System.out.println("==========================================");
+        while (true) {
+            System.out.println("\n1. Add Book");
+            System.out.println("2. View All Books");
+            System.out.println("3. Register Member");
+            System.out.println("4. Issue Book");
+            System.out.println("5. Return Book");
+            System.out.println("6. View Transactions");
+            System.out.println("7. Search Book");
+            System.out.println("8. Exit");
+            System.out.print("Choice: ");
+            int ch = sc.nextInt();
+            switch (ch) {
+                case 1: addBook(); break;
+                case 2: viewBooks(); break;
+                case 3: registerMember(); break;
+                case 4: issueBook(); break;
+                case 5: returnBook(); break;
+                case 6: viewTransactions(); break;
+                case 7: searchBook(); break;
+                case 8: System.out.println("Happy Reading!"); return;
+                default: System.out.println("Invalid!");
+            }
+        }
+    }
+
+    static void addBook() {
+        sc.nextLine();
+        System.out.print("Book ID: ");
+        String id = sc.next();
+        sc.nextLine();
+        System.out.print("Title: ");
+        String title = sc.nextLine();
+        System.out.print("Author: ");
+        String author = sc.nextLine();
+        System.out.print("Category: ");
+        String cat = sc.next();
+        System.out.print("Total Copies: ");
+        String copies = sc.next();
+        books.add(new String[]{id, title, author, cat, copies, copies});
+        System.out.println("Book added: " + title);
+    }
+
+    static void viewBooks() {
+        System.out.println("\n--- BOOKS ---");
+        System.out.printf("%-6s %-30s %-20s %-12s %-7s %-9s%n",
+            "ID", "Title", "Author", "Category", "Total", "Available");
+        System.out.println("-".repeat(90));
+        for (String[] b : books) {
+            System.out.printf("%-6s %-30s %-20s %-12s %-7s %-9s%n",
+                b[0], b[1], b[2], b[3], b[4], b[5]);
+        }
+    }
+
+    static void registerMember() {
+        sc.nextLine();
+        System.out.print("Member Name: ");
+        String name = sc.nextLine();
+        System.out.print("Email: ");
+        String email = sc.next();
+        System.out.print("Phone: ");
+        String phone = sc.next();
+        String mid = "M" + mCounter++;
+        members.add(new String[]{mid, name, email, phone, "0"});
+        System.out.println("Member registered! ID: " + mid);
+    }
+
+    static void issueBook() {
+        viewBooks();
+        System.out.print("\nBook ID: ");
+        String bid = sc.next();
+        int bIdx = findBook(bid);
+        if (bIdx == -1) { System.out.println("Book not found!"); return; }
+        if (Integer.parseInt(books.get(bIdx)[5]) == 0) {
+            System.out.println("No copies available!"); return;
+        }
+        System.out.print("Member ID: ");
+        String mid = sc.next();
+        String[] member = findMember(mid);
+        if (member == null) { System.out.println("Member not found!"); return; }
+        if (Integer.parseInt(member[4]) >= 3) {
+            System.out.println("Member has reached max book limit (3)!"); return;
+        }
+        System.out.print("Issue Date (DD/MM/YYYY): ");
+        String date = sc.next();
+        System.out.print("Due Date (DD/MM/YYYY): ");
+        String due = sc.next();
+
+        books.get(bIdx)[5] = String.valueOf(Integer.parseInt(books.get(bIdx)[5]) - 1);
+        member[4] = String.valueOf(Integer.parseInt(member[4]) + 1);
+        String tid = "T" + tCounter++;
+        transactions.add(new String[]{tid, bid, books.get(bIdx)[1], mid, member[1], date, due, "Issued"});
+        System.out.println("\nBook Issued! Transaction ID: " + tid);
+        System.out.println("Due Date: " + due + " | Fine: Rs.2/day after due date");
+    }
+
+    static void returnBook() {
+        System.out.print("Enter Transaction ID: ");
+        String tid = sc.next();
+        for (String[] t : transactions) {
+            if (t[0].equals(tid) && t[7].equals("Issued")) {
+                int bIdx = findBook(t[1]);
+                books.get(bIdx)[5] = String.valueOf(Integer.parseInt(books.get(bIdx)[5]) + 1);
+                String[] member = findMember(t[3]);
+                if (member != null) member[4] = String.valueOf(Integer.parseInt(member[4]) - 1);
+                System.out.print("Return Date (DD/MM/YYYY): ");
+                String retDate = sc.next();
+                System.out.print("Days Overdue (0 if on time): ");
+                int overdue = sc.nextInt();
+                double fine = overdue * 2.0;
+                t[7] = "Returned";
+                System.out.println("Book returned: " + t[2]);
+                if (fine > 0) System.out.println("Fine charged: Rs." + fine);
+                else System.out.println("No fine. Thank you!");
+                return;
+            }
+        }
+        System.out.println("Transaction not found!");
+    }
+
+    static void viewTransactions() {
+        if (transactions.isEmpty()) { System.out.println("No transactions!"); return; }
+        System.out.println("\n--- TRANSACTIONS ---");
+        System.out.printf("%-6s %-6s %-25s %-6s %-15s %-12s %-12s %-10s%n",
+            "TID", "BookID", "Title", "MemID", "Member", "Issue", "Due", "Status");
+        System.out.println("-".repeat(100));
+        for (String[] t : transactions) {
+            System.out.printf("%-6s %-6s %-25s %-6s %-15s %-12s %-12s %-10s%n",
+                t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7]);
+        }
+    }
+
+    static void searchBook() {
+        sc.nextLine();
+        System.out.print("Search by title/author: ");
+        String key = sc.nextLine().toLowerCase();
+        System.out.println("\n--- RESULTS ---");
+        boolean found = false;
+        for (String[] b : books) {
+            if (b[1].toLowerCase().contains(key) || b[2].toLowerCase().contains(key)) {
+                System.out.println("ID: " + b[0] + " | " + b[1] + " by " + b[2]
+                    + " | Available: " + b[5] + "/" + b[4]);
+                found = true;
+            }
+        }
+        if (!found) System.out.println("No books found!");
+    }
+
+    static int findBook(String id) {
+        for (int i = 0; i < books.size(); i++)
+            if (books.get(i)[0].equalsIgnoreCase(id)) return i;
+        return -1;
+    }
+
+    static String[] findMember(String id) {
+        for (String[] m : members) if (m[0].equals(id)) return m;
+        return null;
+    }
+}
