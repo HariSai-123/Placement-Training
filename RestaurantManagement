@@ -1,0 +1,182 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_ITEMS 30
+#define MAX_ORDERS 50
+#define MAX_ORDER_ITEMS 10
+
+typedef struct {
+    char id[8];
+    char name[30];
+    char category[15];
+    float price;
+    int available;
+} MenuItem;
+
+typedef struct {
+    char itemId[8];
+    char itemName[30];
+    int qty;
+    float subtotal;
+} OrderItem;
+
+typedef struct {
+    char orderId[10];
+    int tableNo;
+    char customerName[30];
+    OrderItem items[MAX_ORDER_ITEMS];
+    int itemCount;
+    float total;
+    char status[15];
+} Order;
+
+MenuItem menu[MAX_ITEMS];
+Order orders[MAX_ORDERS];
+int menuCount = 0, orderCount = 0;
+int orderIdCounter = 5001;
+
+void initMenu() {
+    char ids[][8]  = {"F001","F002","F003","F004","F005","F006","F007","F008"};
+    char names[][30] = {"Veg Biryani","Chicken Biryani","Paneer Butter Masala",
+        "Dal Tadka","Fried Rice","Noodles","Gulab Jamun","Ice Cream"};
+    char cats[][15] = {"Main","Main","Main","Main","Main","Main","Dessert","Dessert"};
+    float prices[] = {120,180,160,100,110,130,60,80};
+    menuCount = 8;
+    for (int i = 0; i < menuCount; i++) {
+        strcpy(menu[i].id, ids[i]);
+        strcpy(menu[i].name, names[i]);
+        strcpy(menu[i].category, cats[i]);
+        menu[i].price = prices[i];
+        menu[i].available = 1;
+    }
+}
+
+int findMenuItem(char *id) {
+    for (int i = 0; i < menuCount; i++)
+        if (strcmp(menu[i].id, id) == 0 && menu[i].available) return i;
+    return -1;
+}
+
+void viewMenu() {
+    printf("\n--- MENU ---\n");
+    printf("%-8s %-25s %-12s %-8s\n", "ID", "Item", "Category", "Price");
+    printf("%s\n", "------------------------------------------------------");
+    for (int i = 0; i < menuCount; i++) {
+        if (menu[i].available)
+            printf("%-8s %-25s %-12s Rs.%.2f\n",
+                menu[i].id, menu[i].name, menu[i].category, menu[i].price);
+    }
+}
+
+void placeOrder() {
+    viewMenu();
+    char name[30]; int tableNo;
+    printf("\nCustomer Name: ");
+    scanf(" %[^\n]", name);
+    printf("Table Number: ");
+    scanf("%d", &tableNo);
+
+    Order *o = &orders[orderCount];
+    sprintf(o->orderId, "ORD%d", orderIdCounter++);
+    strcpy(o->customerName, name);
+    o->tableNo = tableNo;
+    o->itemCount = 0;
+    o->total = 0;
+    strcpy(o->status, "Active");
+
+    int addMore = 1;
+    while (addMore && o->itemCount < MAX_ORDER_ITEMS) {
+        char pid[8]; int qty;
+        printf("Item ID (or 0 to finish): ");
+        scanf("%s", pid);
+        if (strcmp(pid, "0") == 0) break;
+        int idx = findMenuItem(pid);
+        if (idx == -1) { printf("Item not found!\n"); continue; }
+        printf("Quantity: ");
+        scanf("%d", &qty);
+        float sub = menu[idx].price * qty;
+        strcpy(o->items[o->itemCount].itemId, pid);
+        strcpy(o->items[o->itemCount].itemName, menu[idx].name);
+        o->items[o->itemCount].qty = qty;
+        o->items[o->itemCount].subtotal = sub;
+        o->total += sub;
+        o->itemCount++;
+        printf("Added: %d x %s = Rs.%.2f\n", qty, menu[idx].name, sub);
+        printf("Add more? (1=Yes/0=No): ");
+        scanf("%d", &addMore);
+    }
+    orderCount++;
+    printf("\nOrder placed! ID: %s | Table: %d | Total: Rs.%.2f\n",
+        o->orderId, tableNo, o->total);
+}
+
+void generateBill() {
+    char oid[10];
+    printf("Enter Order ID: ");
+    scanf("%s", oid);
+    for (int i = 0; i < orderCount; i++) {
+        if (strcmp(orders[i].orderId, oid) == 0) {
+            float tax = orders[i].total * 0.05;
+            float service = orders[i].total * 0.10;
+            float grand = orders[i].total + tax + service;
+            printf("\n============================================\n");
+            printf("           RESTAURANT BILL\n");
+            printf("============================================\n");
+            printf("Order ID   : %s\n", orders[i].orderId);
+            printf("Table      : %d\n", orders[i].tableNo);
+            printf("Customer   : %s\n", orders[i].customerName);
+            printf("--------------------------------------------\n");
+            printf("%-20s %-4s %-8s %-8s\n", "Item", "Qty", "Rate", "Amount");
+            printf("--------------------------------------------\n");
+            for (int j = 0; j < orders[i].itemCount; j++) {
+                printf("%-20s %-4d Rs.%-5.2f Rs.%.2f\n",
+                    orders[i].items[j].itemName, orders[i].items[j].qty,
+                    orders[i].items[j].subtotal / orders[i].items[j].qty,
+                    orders[i].items[j].subtotal);
+            }
+            printf("--------------------------------------------\n");
+            printf("Sub Total    : Rs.%.2f\n", orders[i].total);
+            printf("GST (5%%)     : Rs.%.2f\n", tax);
+            printf("Service(10%%): Rs.%.2f\n", service);
+            printf("============================================\n");
+            printf("GRAND TOTAL  : Rs.%.2f\n", grand);
+            printf("============================================\n");
+            strcpy(orders[i].status, "Billed");
+            return;
+        }
+    }
+    printf("Order not found!\n");
+}
+
+void viewOrders() {
+    if (orderCount == 0) { printf("No orders!\n"); return; }
+    printf("\n--- ORDERS ---\n");
+    for (int i = 0; i < orderCount; i++) {
+        printf("Order: %s | Table: %d | Customer: %s | Items: %d | Total: Rs.%.2f | %s\n",
+            orders[i].orderId, orders[i].tableNo, orders[i].customerName,
+            orders[i].itemCount, orders[i].total, orders[i].status);
+    }
+}
+
+int main() {
+    initMenu();
+    int choice;
+    printf("==========================================\n");
+    printf("      RESTAURANT MANAGEMENT SYSTEM\n");
+    printf("==========================================\n");
+    do {
+        printf("\n1. View Menu\n2. Place Order\n3. Generate Bill\n4. View Orders\n5. Exit\n");
+        printf("Choice: ");
+        scanf("%d", &choice);
+        switch (choice) {
+            case 1: viewMenu(); break;
+            case 2: placeOrder(); break;
+            case 3: generateBill(); break;
+            case 4: viewOrders(); break;
+            case 5: printf("Thank you! Visit again!\n"); break;
+            default: printf("Invalid!\n");
+        }
+    } while (choice != 5);
+    return 0;
+}
