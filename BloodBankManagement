@@ -1,0 +1,142 @@
+import java.util.*;
+
+public class BloodBankManagementSystem {
+    static Scanner sc = new Scanner(System.in);
+    static ArrayList<String[]> donors = new ArrayList<>();
+    static ArrayList<String[]> requests = new ArrayList<>();
+    static Map<String, Integer> bloodInventory = new LinkedHashMap<>();
+    static int donorCounter = 9001, reqCounter = 6001;
+
+    static {
+        bloodInventory.put("A+", 10); bloodInventory.put("A-", 5);
+        bloodInventory.put("B+", 12); bloodInventory.put("B-", 4);
+        bloodInventory.put("AB+", 8); bloodInventory.put("AB-", 3);
+        bloodInventory.put("O+", 15); bloodInventory.put("O-", 6);
+    }
+
+    public static void main(String[] args) {
+        System.out.println("============================================");
+        System.out.println("       BLOOD BANK MANAGEMENT SYSTEM");
+        System.out.println("============================================");
+        while (true) {
+            System.out.println("\n1. Register Donor");
+            System.out.println("2. Donate Blood");
+            System.out.println("3. Request Blood");
+            System.out.println("4. View Blood Inventory");
+            System.out.println("5. View All Donors");
+            System.out.println("6. View All Requests");
+            System.out.println("7. Exit");
+            System.out.print("Choice: ");
+            int ch = sc.nextInt();
+            switch (ch) {
+                case 1: registerDonor(); break;
+                case 2: donateBlood(); break;
+                case 3: requestBlood(); break;
+                case 4: viewInventory(); break;
+                case 5: viewDonors(); break;
+                case 6: viewRequests(); break;
+                case 7: System.out.println("Save lives, donate blood!"); return;
+                default: System.out.println("Invalid!");
+            }
+        }
+    }
+
+    static void registerDonor() {
+        sc.nextLine();
+        System.out.print("Donor Name: ");
+        String name = sc.nextLine();
+        System.out.print("Age: ");
+        int age = sc.nextInt();
+        System.out.print("Gender (M/F): ");
+        String gender = sc.next();
+        System.out.print("Blood Group (A+/A-/B+/B-/AB+/AB-/O+/O-): ");
+        String blood = sc.next();
+        System.out.print("Phone: ");
+        String phone = sc.next();
+        if (!bloodInventory.containsKey(blood)) { System.out.println("Invalid blood group!"); return; }
+        String did = "DN" + donorCounter++;
+        donors.add(new String[]{did, name, String.valueOf(age), gender, blood, phone, "Registered"});
+        System.out.println("Donor registered! ID: " + did);
+    }
+
+    static void donateBlood() {
+        System.out.print("Enter Donor ID: ");
+        String did = sc.next();
+        for (String[] d : donors) {
+            if (d[0].equals(did)) {
+                String blood = d[4];
+                bloodInventory.put(blood, bloodInventory.get(blood) + 1);
+                d[6] = "Donated";
+                System.out.println("Thank you " + d[1] + "! 1 unit of " + blood + " added.");
+                System.out.println("New " + blood + " stock: " + bloodInventory.get(blood) + " units");
+                return;
+            }
+        }
+        System.out.println("Donor not found!");
+    }
+
+    static void requestBlood() {
+        sc.nextLine();
+        System.out.print("Patient Name: ");
+        String patient = sc.nextLine();
+        System.out.print("Hospital Name: ");
+        String hospital = sc.nextLine();
+        System.out.print("Blood Group Required: ");
+        String blood = sc.next();
+        System.out.print("Units Required: ");
+        int units = sc.nextInt();
+        System.out.print("Doctor Name: ");
+        sc.nextLine();
+        String doctor = sc.nextLine();
+
+        if (!bloodInventory.containsKey(blood)) { System.out.println("Invalid blood group!"); return; }
+        int available = bloodInventory.get(blood);
+        String status;
+        if (available >= units) {
+            bloodInventory.put(blood, available - units);
+            status = "Fulfilled";
+        } else {
+            status = "Pending (Only " + available + " units available)";
+        }
+
+        String rid = "RQ" + reqCounter++;
+        requests.add(new String[]{rid, patient, hospital, blood, String.valueOf(units), doctor, status});
+        System.out.println("\n--- REQUEST STATUS ---");
+        System.out.println("Request ID : " + rid);
+        System.out.println("Patient    : " + patient);
+        System.out.println("Blood Type : " + blood);
+        System.out.println("Units      : " + units);
+        System.out.println("Status     : " + status);
+    }
+
+    static void viewInventory() {
+        System.out.println("\n--- BLOOD INVENTORY ---");
+        System.out.printf("%-10s %-10s %-15s%n", "Blood Group", "Units", "Status");
+        System.out.println("-".repeat(38));
+        for (Map.Entry<String, Integer> e : bloodInventory.entrySet()) {
+            String status = e.getValue() < 5 ? "CRITICAL LOW" : e.getValue() < 10 ? "Low" : "Adequate";
+            System.out.printf("%-10s %-10d %-15s%n", e.getKey(), e.getValue(), status);
+        }
+    }
+
+    static void viewDonors() {
+        if (donors.isEmpty()) { System.out.println("No donors!"); return; }
+        System.out.println("\n--- DONORS ---");
+        System.out.printf("%-6s %-15s %-4s %-6s %-8s %-12s %-10s%n",
+            "ID", "Name", "Age", "Gender", "Blood", "Phone", "Status");
+        System.out.println("-".repeat(68));
+        for (String[] d : donors) {
+            System.out.printf("%-6s %-15s %-4s %-6s %-8s %-12s %-10s%n",
+                d[0], d[1], d[2], d[3], d[4], d[5], d[6]);
+        }
+    }
+
+    static void viewRequests() {
+        if (requests.isEmpty()) { System.out.println("No requests!"); return; }
+        System.out.println("\n--- BLOOD REQUESTS ---");
+        for (String[] r : requests) {
+            System.out.println("ID: " + r[0] + " | Patient: " + r[1] + " | Hospital: " + r[2]
+                + " | Blood: " + r[3] + " | Units: " + r[4] + " | Status: " + r[6]);
+        }
+    }
+}
