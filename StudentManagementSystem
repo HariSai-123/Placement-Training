@@ -1,0 +1,166 @@
+import java.util.*;
+
+public class StudentManagementSystem {
+    static Scanner sc = new Scanner(System.in);
+    static ArrayList<String[]> students = new ArrayList<>();
+    static ArrayList<String[]> grades = new ArrayList<>();
+    static int counter = 2024001;
+
+    public static void main(String[] args) {
+        System.out.println("============================================");
+        System.out.println("       STUDENT MANAGEMENT SYSTEM");
+        System.out.println("============================================");
+        while (true) {
+            System.out.println("\n1. Enroll Student");
+            System.out.println("2. View All Students");
+            System.out.println("3. Search Student");
+            System.out.println("4. Add Grades");
+            System.out.println("5. View Report Card");
+            System.out.println("6. Update Attendance");
+            System.out.println("7. Delete Student");
+            System.out.println("8. Exit");
+            System.out.print("Choice: ");
+            int ch = sc.nextInt();
+            switch (ch) {
+                case 1: enrollStudent(); break;
+                case 2: viewStudents(); break;
+                case 3: searchStudent(); break;
+                case 4: addGrades(); break;
+                case 5: viewReportCard(); break;
+                case 6: updateAttendance(); break;
+                case 7: deleteStudent(); break;
+                case 8: System.out.println("Goodbye!"); return;
+                default: System.out.println("Invalid!");
+            }
+        }
+    }
+
+    static void enrollStudent() {
+        sc.nextLine();
+        System.out.print("Student Name: ");
+        String name = sc.nextLine();
+        System.out.print("Age: ");
+        int age = sc.nextInt();
+        System.out.print("Gender (M/F): ");
+        String gender = sc.next();
+        sc.nextLine();
+        System.out.print("Address: ");
+        String addr = sc.nextLine();
+        System.out.print("Phone: ");
+        String phone = sc.next();
+        System.out.print("Course: ");
+        String course = sc.next();
+        System.out.print("Year (1/2/3/4): ");
+        int year = sc.nextInt();
+        String sid = "STU" + counter++;
+        students.add(new String[]{sid, name, String.valueOf(age), gender, phone, course,
+            String.valueOf(year), "100", "0"});
+        System.out.println("\nStudent enrolled! ID: " + sid);
+    }
+
+    static void viewStudents() {
+        if (students.isEmpty()) { System.out.println("No students!"); return; }
+        System.out.println("\n--- ALL STUDENTS ---");
+        System.out.printf("%-12s %-15s %-4s %-6s %-10s %-10s %-4s %-6s%n",
+            "ID", "Name", "Age", "Gender", "Phone", "Course", "Year", "Attend%");
+        System.out.println("-".repeat(75));
+        for (String[] s : students) {
+            double attend = (Double.parseDouble(s[7]) / Double.parseDouble(s[8] + "1")) * 100;
+            System.out.printf("%-12s %-15s %-4s %-6s %-10s %-10s %-4s %-6s%n",
+                s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[8] + "%");
+        }
+    }
+
+    static void searchStudent() {
+        sc.nextLine();
+        System.out.print("Enter Student ID or Name: ");
+        String key = sc.nextLine().toLowerCase();
+        System.out.println("\n--- SEARCH RESULTS ---");
+        boolean found = false;
+        for (String[] s : students) {
+            if (s[0].toLowerCase().contains(key) || s[1].toLowerCase().contains(key)) {
+                System.out.println("ID: " + s[0] + " | Name: " + s[1] + " | Course: " + s[5]
+                    + " | Year: " + s[6] + " | Phone: " + s[4]);
+                found = true;
+            }
+        }
+        if (!found) System.out.println("No student found!");
+    }
+
+    static void addGrades() {
+        System.out.print("Enter Student ID: ");
+        String sid = sc.next();
+        String[] student = findStudent(sid);
+        if (student == null) { System.out.println("Student not found!"); return; }
+        sc.nextLine();
+        System.out.print("Subject: ");
+        String sub = sc.nextLine();
+        System.out.print("Marks (out of 100): ");
+        int marks = sc.nextInt();
+        String grade = marks >= 90 ? "A+" : marks >= 80 ? "A" : marks >= 70 ? "B" :
+            marks >= 60 ? "C" : marks >= 50 ? "D" : "F";
+        grades.add(new String[]{sid, student[1], sub, String.valueOf(marks), grade});
+        System.out.println("Grade added! " + sub + ": " + marks + "/100 (" + grade + ")");
+    }
+
+    static void viewReportCard() {
+        System.out.print("Enter Student ID: ");
+        String sid = sc.next();
+        String[] student = findStudent(sid);
+        if (student == null) { System.out.println("Student not found!"); return; }
+        System.out.println("\n====== REPORT CARD ======");
+        System.out.println("Student ID : " + sid);
+        System.out.println("Name       : " + student[1]);
+        System.out.println("Course     : " + student[5] + " (Year " + student[6] + ")");
+        System.out.println("-------------------------");
+        System.out.printf("%-20s %-8s %-6s%n", "Subject", "Marks", "Grade");
+        System.out.println("-".repeat(37));
+        int total = 0, count = 0;
+        for (String[] g : grades) {
+            if (g[0].equals(sid)) {
+                System.out.printf("%-20s %-8s %-6s%n", g[2], g[3] + "/100", g[4]);
+                total += Integer.parseInt(g[3]);
+                count++;
+            }
+        }
+        if (count > 0) {
+            double avg = (double) total / count;
+            System.out.println("-".repeat(37));
+            System.out.printf("Average: %.2f/100%n", avg);
+            System.out.println("Result: " + (avg >= 50 ? "PASS" : "FAIL"));
+        } else {
+            System.out.println("No grades added yet.");
+        }
+        System.out.println("=========================");
+    }
+
+    static void updateAttendance() {
+        System.out.print("Enter Student ID: ");
+        String sid = sc.next();
+        String[] student = findStudent(sid);
+        if (student == null) { System.out.println("Student not found!"); return; }
+        System.out.print("Attendance % (0-100): ");
+        int attend = sc.nextInt();
+        student[8] = String.valueOf(attend);
+        System.out.println("Attendance updated to " + attend + "% for " + student[1]);
+        if (attend < 75) System.out.println("WARNING: Attendance below 75%! Shortage.");
+    }
+
+    static void deleteStudent() {
+        System.out.print("Enter Student ID: ");
+        String sid = sc.next();
+        for (int i = 0; i < students.size(); i++) {
+            if (students.get(i)[0].equals(sid)) {
+                System.out.println("Student " + students.get(i)[1] + " removed.");
+                students.remove(i);
+                return;
+            }
+        }
+        System.out.println("Student not found!");
+    }
+
+    static String[] findStudent(String id) {
+        for (String[] s : students) if (s[0].equals(id)) return s;
+        return null;
+    }
+}
